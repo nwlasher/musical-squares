@@ -14,44 +14,47 @@ Below is a tree that I will update with each polishing push outlining the direct
 Tests exist as separate Platformio projects that can be flashed individually to test the hardware and software at different levels. The main project software is contained within 'musical-squares/'. 
 
 .
-├── giga-blink 
-│   ├── compile_commands.json
-│   ├── include
-│   │   └── README
-│   ├── lib
-│   │   └── README
-│   ├── platformio.ini
-│   ├── src
-│   │   └── main.cpp
-│   └── test
-│       └── README
-├── musical-squares
-│   ├── compile_commands.json
-│   ├── include
-│   │   └── README
-│   ├── lib
-│   │   └── README
-│   ├── platformio.ini
-│   ├── src
-│   │   ├── main.cpp
-│   │   ├── rgbTCS34725.cpp
-│   │   └── rgbTCS34725.hpp
-│   └── test
-│       └── README
-├── README.md
-└── rgb-sensor-debug
-    ├── compile_commands.json
-    ├── include
-    │   └── README
-    ├── lib
-    │   └── README
-    ├── platformio.ini
-    ├── src
-    │   ├── main.cpp
-    │   ├── rgbTCS34725.cpp
-    │   └── rgbTCS34725.hpp
-    └── test
-        └── README
+├── Code
+│   ├── giga-blink
+│   │   ├── compile_commands.json
+│   │   ├── include
+│   │   │   └── README
+│   │   ├── lib
+│   │   │   └── README
+│   │   ├── platformio.ini
+│   │   ├── src
+│   │   │   └── main.cpp
+│   │   └── test
+│   │       └── README
+│   ├── musical-squares
+│   │   ├── compile_commands.json
+│   │   ├── include
+│   │   │   └── README
+│   │   ├── lib
+│   │   │   └── README
+│   │   ├── platformio.ini
+│   │   ├── src
+│   │   │   ├── main.cpp
+│   │   │   ├── rgbTCS34725.cpp
+│   │   │   └── rgbTCS34725.hpp
+│   │   └── test
+│   │       └── README
+│   └── rgb-sensor-debug
+│       ├── compile_commands.json
+│       ├── include
+│       │   └── README
+│       ├── lib
+│       │   └── README
+│       ├── platformio.ini
+│       ├── src
+│       │   ├── main.cpp
+│       │   ├── rgbTCS34725.cpp
+│       │   └── rgbTCS34725.hpp
+│       └── test
+│           └── README
+├── Documentation
+│   ├── Presentation
+│   └── Technical-reference
+└── README.md
 
-16 directories, 23 files
-
+20 directories, 23 files
