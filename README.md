@@ -15,17 +15,6 @@ Tests exist as separate Platformio projects that can be flashed individually to 
 
 .
 ├── Code
-│   ├── giga-blink
-│   │   ├── compile_commands.json
-│   │   ├── include
-│   │   │   └── README
-│   │   ├── lib
-│   │   │   └── README
-│   │   ├── platformio.ini
-│   │   ├── src
-│   │   │   └── main.cpp
-│   │   └── test
-│   │       └── README
 │   ├── musical-squares
 │   │   ├── compile_commands.json
 │   │   ├── include
@@ -39,22 +28,40 @@ Tests exist as separate Platformio projects that can be flashed individually to 
 │   │   │   └── rgbTCS34725.hpp
 │   │   └── test
 │   │       └── README
-│   └── rgb-sensor-debug
-│       ├── compile_commands.json
-│       ├── include
-│       │   └── README
-│       ├── lib
-│       │   └── README
-│       ├── platformio.ini
-│       ├── src
-│       │   ├── main.cpp
-│       │   ├── rgbTCS34725.cpp
-│       │   └── rgbTCS34725.hpp
-│       └── test
-│           └── README
+│   └── Testbenches
+│       ├── giga-blink
+│       │   ├── compile_commands.json
+│       │   ├── include
+│       │   │   └── README
+│       │   ├── lib
+│       │   │   └── README
+│       │   ├── platformio.ini
+│       │   ├── src
+│       │   │   └── main.cpp
+│       │   └── test
+│       │       └── README
+│       └── rgb-sensor-debug
+│           ├── compile_commands.json
+│           ├── include
+│           │   └── README
+│           ├── lib
+│           │   └── README
+│           ├── platformio.ini
+│           ├── src
+│           │   ├── main.cpp
+│           │   ├── rgbTCS34725.cpp
+│           │   └── rgbTCS34725.hpp
+│           └── test
+│               └── README
 ├── Documentation
 │   ├── Presentation
 │   └── Technical-reference
+│       ├── Images
+│       │   └── IMG_2811.jpeg
+│       ├── repo-tree.txt
+│       ├── tech-docs-ms.pdf
+│       └── tech-docs-ms.typ
+├── map-repo.sh
 └── README.md
 
-20 directories, 23 files
+22 directories, 28 files
