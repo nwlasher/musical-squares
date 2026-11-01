@@ -2,11 +2,13 @@
 the TCS34725 RGB color/light sensors over I2C. */
 
 #include <Wire.h>
+#include <cstdint>
 #include <stdint.h>
 
-#define RGB_MAX_DATA_RATE 400 // Maximum data rate for the color sensors
+#define RGB_MAX_DATA_RATE 400000 // Maximum data rate for the color sensors
 
 // List of sensors mapped to their positions on the chassis and assoc. pinouts
+// Comment out enums to de configure sensors. Do the same to the busses and names below
 enum SensorId : uint8_t {
     LEFT, // SDA/SCL 0 / Wire / pins 20 & 21
     CENTER, // SDA/SCL 1 / Wire1 / pins 16 & 17
@@ -15,9 +17,9 @@ enum SensorId : uint8_t {
 };
 
 // Map enum to wire objects
-TwoWire* rgb_sensors[NUM_SENSORS] = {&Wire, &Wire1, &Wire2};
+TwoWire* const rgb_sensors[NUM_SENSORS] = {&Wire, &Wire1, &Wire2};
 // Map enum to string labels for debug output
-const char* const sensor_names[NUM_SENSORS] = { "LEFT", "CENTER", "RIGHT" };
+const char* const sensor_names[NUM_SENSORS] = { "LEFT" , "CENTER", "RIGHT" };
 
 const uint8_t ADDR = 0x29; // I2C Address of TCS34725 chip 
 const uint8_t CMD = 0x80; // Adresses the Command register 
@@ -33,7 +35,8 @@ const uint8_t REG_STATUS = 0x13;
 const uint8_t REG_CDATAL = 0x14;
 
 // Meaningful register values
-const uint8_t TCS34725_ID = 0x44;
+const uint8_t TCS3472_1_5_ID = 0x44;
+const uint8_t TCS3472_3_7_ID = 0x4D;
 
 /// Structure definitions
 struct Color {uint16_t c, r, g, b; };
