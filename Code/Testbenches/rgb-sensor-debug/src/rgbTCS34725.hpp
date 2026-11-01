@@ -2,7 +2,6 @@
 the TCS34725 RGB color/light sensors over I2C. */
 
 #include <Wire.h>
-#include <cstdint>
 #include <stdint.h>
 
 #define RGB_MAX_DATA_RATE 400 // Maximum data rate for the color sensors

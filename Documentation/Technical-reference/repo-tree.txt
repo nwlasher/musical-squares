@@ -1,0 +1,49 @@
+./
+├── Code/
+│   ├── musical-squares/
+│   │   ├── include/
+│   │   │   └── README
+│   │   ├── lib/
+│   │   │   └── README
+│   │   ├── src/
+│   │   │   ├── main.cpp
+│   │   │   ├── rgbTCS34725.cpp
+│   │   │   └── rgbTCS34725.hpp
+│   │   ├── test/
+│   │   │   └── README
+│   │   ├── compile_commands.json
+│   │   └── platformio.ini
+│   └── Testbenches/
+│       ├── giga-blink/
+│       │   ├── include/
+│       │   │   └── README
+│       │   ├── lib/
+│       │   │   └── README
+│       │   ├── src/
+│       │   │   └── main.cpp
+│       │   ├── test/
+│       │   │   └── README
+│       │   ├── compile_commands.json
+│       │   └── platformio.ini
+│       └── rgb-sensor-debug/
+│           ├── include/
+│           │   └── README
+│           ├── lib/
+│           │   └── README
+│           ├── src/
+│           │   ├── main.cpp
+│           │   ├── rgbTCS34725.cpp
+│           │   └── rgbTCS34725.hpp
+│           ├── test/
+│           │   └── README
+│           ├── compile_commands.json
+│           └── platformio.ini
+├── Documentation/
+│   ├── Presentation/
+│   └── Technical-reference/
+│       ├── Images/
+│       │   └── IMG_2811.jpeg
+│       ├── tech-docs-ms.pdf
+│       └── tech-docs-ms.typ
+├── map-repo.sh*
+└── README.md
