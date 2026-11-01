@@ -11,15 +11,15 @@ the TCS34725 RGB color/light sensors over I2C. */
 // Comment out enums to de configure sensors. Do the same to the busses and names below
 enum SensorId : uint8_t {
     LEFT, // SDA/SCL 0 / Wire / pins 20 & 21
-    CENTER, // SDA/SCL 1 / Wire1 / pins 16 & 17
-    RIGHT, // SDA/SCL 2 / Wire2 / pins 8 & 9
+    //CENTER, // SDA/SCL 1 / Wire1 / pins 16 & 17
+    //RIGHT, // SDA/SCL 2 / Wire2 / pins 8 & 9
     NUM_SENSORS
 };
 
 // Map enum to wire objects
-TwoWire* const rgb_sensors[NUM_SENSORS] = {&Wire, &Wire1, &Wire2};
+TwoWire* const rgb_sensors[NUM_SENSORS] = {&Wire}; //, &Wire1, &Wire2};
 // Map enum to string labels for debug output
-const char* const sensor_names[NUM_SENSORS] = { "LEFT" , "CENTER", "RIGHT" };
+const char* const sensor_names[NUM_SENSORS] = { "LEFT"}; //  , "CENTER", "RIGHT" };
 
 const uint8_t ADDR = 0x29; // I2C Address of TCS34725 chip 
 const uint8_t CMD = 0x80; // Adresses the Command register 

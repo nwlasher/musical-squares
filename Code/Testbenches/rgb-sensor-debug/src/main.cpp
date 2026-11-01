@@ -10,24 +10,38 @@
 #include "avr/pgmspace.h"
 #include "rgbTCS3472x.hpp"
 
-// For debug output on it's own lane using GPIO (Requires UART-USB bridge)
-// --- FLAG: Comment out this line to use Serial (USB) instead ---
-// Note that this flag controls where the raw sensor debug output goes
-#define USE_HARDWARE_UART // For raw data output lane
-// ----------------------------------------------------------------
-// This one controls the port that Debug Terminal traffic is carried over
-// Toggle the 'streaming' variable to declutter output over one port
+// This block steers where the output goes for debug functions
+//   DEBUG = raw sensor stream
+//   DTERM = boot and debug terminal info (typed commands and their replies)
+//
+//   1 = DEBUG on UART,  DTERM on UART   (both over D0/D1)
+//   2 = DEBUG on USB,   DTERM on UART
+//   3 = DEBUG on UART,  DTERM on USB
+//   4 = DEBUG on USB,   DTERM on USB  (Both over usb)
 
-#ifdef USE_HARDWARE_UART
-#define DEBUG_SERIAL Serial1 // Tx and Rx 0 on giga
-#else
-#define DEBUG_SERIAL Serial // USB UART
-#endif
+#define OUTPUT_CONFIG 1
 
-#ifdef DTERM_HARDWARE_UART
-#define DTERM_SERIAL Serial
-#else
-#define DTERM_SERIAL Serial1
+#if OUTPUT_CONFIG == 1
+  #define DEBUG_SERIAL Serial1
+  #define DTERM_SERIAL Serial1
+  #define USES_UART 1
+  #define USES_USB  0
+#elif OUTPUT_CONFIG == 2
+  #define DEBUG_SERIAL Serial
+  #define DTERM_SERIAL Serial1
+  #define USES_UART 1
+  #define USES_USB  1
+#elif OUTPUT_CONFIG == 3
+  #define DEBUG_SERIAL Serial1
+  #define DTERM_SERIAL Serial
+  #define USES_UART 1
+  #define USES_USB  1
+#elif OUTPUT_CONFIG == 4
+  #define DEBUG_SERIAL Serial
+  #define DTERM_SERIAL Serial
+  #define USES_UART 0
+  #define USES_USB  1
+  #error "OUTPUT_CONFIG must be 1, 2, 3 or 4"
 #endif
 
 #define BAUD_RATE 115200 // Serial UART baud rate to PC for debug output
@@ -58,7 +72,14 @@ void scanBus(TwoWire &bus, const char *name){
 
 void setup(){
     delay(500); // Startup settle delay (So I don't miss debug output)
-    DTERM_SERIAL.begin(BAUD_RATE);
+    if (USES_USB){
+        Serial.begin(BAUD_RATE);        
+    }
+    if (USES_UART){
+            Serial1.begin(BAUD_RATE);
+    }
+
+    // Clear DTERMinal and mark boot
     DTERM_SERIAL.print("\033[2J\033[H");
     DTERM_SERIAL.println("boot!");
 
@@ -91,9 +112,8 @@ void printRGBReadings(){
     for (int i = 0; i < 3; i++) {
     if (readReg(*rgb_sensors[i], REG_STATUS) & 0x01) {
       Color k = readColor(*rgb_sensors[i]);
-      Serial.print(sensor_names[i]); // Name 
+      DEBUG_SERIAL.print(sensor_names[i]); // Name 
       DEBUG_SERIAL.print(" C:"); DEBUG_SERIAL.print(k.c); // Values
-
       DEBUG_SERIAL.print(" R:"); DEBUG_SERIAL.print(k.r);
       DEBUG_SERIAL.print(" G:"); DEBUG_SERIAL.print(k.g);
       DEBUG_SERIAL.print(" B:"); DEBUG_SERIAL.println(k.b);

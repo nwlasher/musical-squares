@@ -10,7 +10,7 @@ bool initSensor(TwoWire &bus){
     bus.setClock(RGB_MAX_DATA_RATE);
     // Shout to sensor on bus, ensure it responds with a valid ID for the RGB sensor I'm using
     uint8_t id = readReg(bus, REG_ID);
-    if (id != TCS3472_1_5_ID || id != TCS3472_3_7_ID) return false;
+    if (!(id == TCS3472_1_5_ID || id == TCS3472_3_7_ID)) return false;
     // Write configuration values to register
     writeReg(bus, REG_ATIME, 0xEB); // Set RGBC integration time (resolution)
     writeReg(bus, REG_CONTROL, 0x00); // Set bit 0 in ctrl for 4x gain, it is set to 1 with 0x00
