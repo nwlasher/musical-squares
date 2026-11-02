@@ -1,0 +1,3 @@
+3DX_Same_Sky_Supplier: Same Sky
+3DX_Same_Sky_Description: 70 x 31 mm, Enclosed, Rectangular Case, 2 W, 8 Ohm, Neodymium Magnet, Paper and Cloth Cone, Speaker
+3DX_Same_Sky_Model Number: CES-703116-28PM
