@@ -1,7 +1,7 @@
 /* This file contains the source code for interface functions used in interactions with
    I2C and the TCS34725 RGB color/light sensors */
 
-#include "rgbTCS3472x.hpp"
+#include "TCS3472x.hpp"
 #include <cstdint>
 
 // Initialize sensor

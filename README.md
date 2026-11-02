@@ -13,55 +13,21 @@ For a full list of references see the 'Documentation/' folder. You'll find a tec
 Below is a tree that I will update with each polishing push outlining the directory layout.
 Tests exist as separate Platformio projects that can be flashed individually to test the hardware and software at different levels. The main project software is contained within 'musical-squares/'. 
 
-.
-├── Code
-│   ├── musical-squares
-│   │   ├── compile_commands.json
-│   │   ├── include
-│   │   │   └── README
-│   │   ├── lib
-│   │   │   └── README
-│   │   ├── platformio.ini
-│   │   ├── src
-│   │   │   ├── main.cpp
-│   │   │   ├── rgbTCS34725.cpp
-│   │   │   └── rgbTCS34725.hpp
-│   │   └── test
-│   │       └── README
-│   └── Testbenches
-│       ├── giga-blink
-│       │   ├── compile_commands.json
-│       │   ├── include
-│       │   │   └── README
-│       │   ├── lib
-│       │   │   └── README
-│       │   ├── platformio.ini
-│       │   ├── src
-│       │   │   └── main.cpp
-│       │   └── test
-│       │       └── README
-│       └── rgb-sensor-debug
-│           ├── compile_commands.json
-│           ├── include
-│           │   └── README
-│           ├── lib
-│           │   └── README
-│           ├── platformio.ini
-│           ├── src
-│           │   ├── main.cpp
-│           │   ├── rgbTCS34725.cpp
-│           │   └── rgbTCS34725.hpp
-│           └── test
-│               └── README
-├── Documentation
-│   ├── Presentation
-│   └── Technical-reference
-│       ├── Images
+../
+├── Code/
+│   └── Testbenches/
+│       ├── audio-debug/
+│       ├── giga-blink/
+│       └── rgb-sensor-debug/
+├── Documentation/
+│   ├── Presentation/
+│   └── Technical-reference/
+│       ├── Images/
+│       │   ├── debug-out-config.jpeg
+│       │   ├── debug-out.jpg
+│       │   ├── GigaR1Wifi-pinout.png
 │       │   └── IMG_2811.jpeg
-│       ├── repo-tree.txt
 │       ├── tech-docs-ms.pdf
 │       └── tech-docs-ms.typ
 ├── map-repo.sh
 └── README.md
-
-22 directories, 28 files

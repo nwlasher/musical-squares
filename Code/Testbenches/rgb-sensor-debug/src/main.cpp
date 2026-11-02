@@ -8,7 +8,7 @@
 #include <sys/_intsup.h>
 #include "api/Common.h"
 #include "avr/pgmspace.h"
-#include "rgbTCS3472x.hpp"
+#include "TCS3472x.hpp"
 
 // This block steers where the output goes for debug functions
 //   DEBUG = raw sensor stream
@@ -109,7 +109,8 @@ void setup(){
 
 // For each of the connected sensors, print readings for debug to USB
 void printRGBReadings(){
-    for (int i = 0; i < 3; i++) {
+    DTERM_SERIAL.print("\033[2J\033[H"); // Clear terminal each print to appear in-place    
+    for (int i = 0; i < NUM_SENSORS; i++) {
     if (readReg(*rgb_sensors[i], REG_STATUS) & 0x01) {
       Color k = readColor(*rgb_sensors[i]);
       DEBUG_SERIAL.print(sensor_names[i]); // Name 

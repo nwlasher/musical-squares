@@ -113,7 +113,8 @@ void setup(){
 
 // For each of the connected sensors, print readings for debug to USB
 void printRGBReadings(){
-    for (int i = 0; i < 3; i++) {
+    DTERM_SERIAL.print("\033[2J\033[H"); // Clear terminal each print to appear in-place
+    for (int i = 0; i < NUM_SENSORS; i++) {
     if (readReg(*RGB_SENSORS[i], REG_STATUS) & 0x01) {
       Color k = readColor(*RGB_SENSORS[i]);
       DEBUG_SERIAL.print(SENSOR_NAMES[i]); // Name 

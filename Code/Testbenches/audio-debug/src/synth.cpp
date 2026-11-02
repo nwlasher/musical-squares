@@ -10,7 +10,7 @@
 AdvancedDAC dac0(A12);
 //AdvancedDAC dac1(A13); Hardware will use one signal to both speakers
 
-int16_t sine_table[TABLE_SIZE]; // One cyle centered on zero
+int16_t SINE_TABLE[TABLE_SIZE]; // One cyle centered on zero
 
 // List of tracks
 Track TRACKS[NUM_TRACKS];
@@ -37,7 +37,7 @@ void advanceGlides(){
 // Initialize and start the DACs. Returns false on failed start.
 bool synthInit(){
     for (int i = 0; i < TABLE_SIZE; i++)
-        sine_table[i] = (int16_t)(AMPLITUDE * sinf(2.0f * PI * i / TABLE_SIZE));
+        SINE_TABLE[i] = (int16_t)(AMPLITUDE * sinf(2.0f * PI * i / TABLE_SIZE));
     for (uint8_t t = 0; t < NUM_TRACKS; t++) TRACKS[t] = {false, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
     // resolution, sample rate, samples per buffer, queue depth
     return dac0.begin(AN_RESOLUTION_12, SAMPLE_RATE, BUF_SAMPLES, BUF_COUNT);
@@ -52,7 +52,7 @@ void synthUpdate(){
         int32_t sum = 0;
         for (uint8_t t = 0; t < NUM_TRACKS; t++){
             if (!TRACKS[t].active) continue;
-            sum += sine_table[(int)TRACKS[t].phase];
+            sum += SINE_TABLE[(int)TRACKS[t].phase];
             TRACKS[t].phase += TRACKS[t].step;
             if (TRACKS[t].phase >= TABLE_SIZE) TRACKS[t].phase -= TABLE_SIZE;
         }
@@ -62,14 +62,26 @@ void synthUpdate(){
     dac0.write(buf);                     // Queue it for playback
 }
 
+// Clamps the applied frequency between MIN and MAX FREQ
+float clampFreq(float hz){
+    if(hz > MAX_FREQ) {
+        return MAX_FREQ;
+    }else if (hz < MIN_FREQ){
+        return MIN_FREQ;
+    }else{
+        return hz;
+    }
+}
+
 // Start a track playing an arbitrary frequency in Hz
 void synthPlayHz(uint8_t track, float hz){
+    hz = clampFreq(hz);
     if (track >= NUM_TRACKS) return;
-    Track &k = TRACKS[track];
-    k.hz = k.target_hz = hz;
-    k.hz_per_buffer = 0.0f;                // Cancels any glide in progress
-    k.step = stepFor(hz);
-    k.active = true;
+    Track &t = TRACKS[track];
+    t.hz = t.target_hz = hz;
+    t.hz_per_buffer = 0.0f;                // Cancels any glide in progress
+    t.step = stepFor(hz);
+    t.active = true;
 }
 
 // Start a track playing a descrete tone
@@ -80,13 +92,14 @@ void synthPlay(uint8_t track, Tone tone){
 
 // Slide a playing track to a new note/frequency over a duration in ms
 void synthGlideToHz(uint8_t track, float hz, uint32_t ms){
+    hz = clampFreq(hz);
     if (track >= NUM_TRACKS) return;
-    Track &k = TRACKS[track];
-    if (!k.active || ms == 0){ synthPlayHz(track, hz); return; }  // Nothing to glide from
+    Track &t = TRACKS[track];
+    if (!t.active || ms == 0){ synthPlayHz(track, hz); return; }  // Nothing to glide from
     float buffers = ms / BUFFER_MS;
     if (buffers < 1.0f) buffers = 1.0f;
-    k.target_hz = hz;
-    k.hz_per_buffer = (hz - k.hz) / buffers;
+    t.target_hz = hz;
+    t.hz_per_buffer = (hz - t.hz) / buffers;
 }
  
 void synthGlideTo(uint8_t track, Tone tone, uint32_t ms){
