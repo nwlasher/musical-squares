@@ -5,9 +5,11 @@
 #include <cstdint>
 #include <cstdlib>
 #include <sys/_intsup.h>
+#include "Wire.h"
 #include "api/Common.h"
 #include "avr/pgmspace.h"
 #include "TCS3472x.hpp"
+#include "pins_arduino.h"
 #include "synth.hpp"
 #include "hue.hpp"
 
@@ -56,7 +58,7 @@ const uint8_t illPin = D2; // Common pin to toggle illumination on the RGB color
 const uint16_t CLEAR_TO_IDLE   = 150;   // PLACEHOLDERS: calibrate against real tiles
 const uint16_t CLEAR_TO_ACTIVE = 300;   // must be > CLEAR_TO_IDLE (this gap is the hysteresis)
 const float    SAT_MIN         = 0.25f; // below this the hue is noise (gray/white)
-const unsigned long SENSOR_POLL_MS = 20;
+const unsigned long SENSOR_POLL_MS = 200;
 
 // Globals
 
@@ -72,6 +74,11 @@ unsigned long lastOut = 0; // Marker for the time of previous output
 bool streaming = false; // Off by default due to speaker interference
 char cmdBuf[64]; // Serial input buffer
 uint8_t cmdLen = 0; // Current length of buffer contents
+
+// Storage for debug output; Keeps the sensors from being contacted twice per pass
+Color lastColor[NUM_SENSORS] = {};   // most recent reading per sensor
+bool  haveColor[NUM_SENSORS] = {};   // false until the first reading arrives
+bool  sensorsEnabled = true;         // lets you test audio alone via the "sensors" command
 
 
 
@@ -95,6 +102,9 @@ void setup(){
     if (USES_UART){
             Serial1.begin(BAUD_RATE);
     }
+
+    // Interfereance pin, for debugging the DAC ripple 
+    pinMode(D3, OUTPUT);
 
     // Clear DTERMinal and mark boot
     DTERM_SERIAL.print("\033[2J\033[H");
@@ -123,23 +133,76 @@ void setup(){
     // Initialize DAC
     if (!synthInit()) DEBUG_SERIAL.println("DAC init FAILED");
 
+    // Silence all tracks
+    for (uint8_t i = 0; i < NUM_SENSORS; i++){
+    idle[i]     = true;    // start silent until a tile is seen
+    lastTone[i] = -1;      // nothing playing
+}
     
     DTERM_SERIAL.println("Initialization Complete!");
 }
 
-// For each of the connected sensors, print readings for debug to USB
-void printRGBReadings(){
-    DTERM_SERIAL.print("\033[2J\033[H"); // Clear terminal each print to appear in-place
-    for (int i = 0; i < NUM_SENSORS; i++) {
-    if (readReg(*RGB_SENSORS[i], REG_STATUS) & 0x01) {
-      Color k = readColor(*RGB_SENSORS[i]);
-      DEBUG_SERIAL.print(SENSOR_NAMES[i]); // Name 
-      DEBUG_SERIAL.print(" C:"); DEBUG_SERIAL.print(k.c); // Values
-      DEBUG_SERIAL.print(" R:"); DEBUG_SERIAL.print(k.r);
-      DEBUG_SERIAL.print(" G:"); DEBUG_SERIAL.print(k.g);
-      DEBUG_SERIAL.print(" B:"); DEBUG_SERIAL.println(k.b);
+// Track playback functions
+
+void silence(uint8_t i){
+    if (lastTone[i] >= 0) synthStop(i);
+    lastTone[i] = -1;
+}
+
+// Update the tracks based on I2C sensor data
+void updateTracks(){
+    for (uint8_t i = 0; i < NUM_SENSORS; i++){
+        if (!sensor_ok[i]) continue;
+        if (!(readReg(*RGB_SENSORS[i], REG_STATUS) & 0x01)) continue;  // no new data yet
+        Color k = readColor(*RGB_SENSORS[i]);
+
+        // Store for debug output later
+        lastColor[i] = k;
+        haveColor[i] = true;
+
+        // Brightness gate with hysteresis
+        if (idle[i] && k.c > CLEAR_TO_ACTIVE) idle[i] = false;
+        if (!idle[i] && k.c < CLEAR_TO_IDLE)  idle[i] = true;
+        if (idle[i]) { silence(i); continue; }
+
+        // Saturation gate: bright but colorless (gray/white) is also silence
+        float sat;
+        float hue = hueFromColor(k, sat);
+        if (sat < SAT_MIN) { silence(i); continue; }
+
+        // Only touch the synth when the note changes
+        int8_t tone = (int8_t)hueToTone(hue);
+        if (tone == lastTone[i]) continue;
+        if (lastTone[i] < 0) synthPlay(i, (Tone)tone);
+        else                 synthGlideTo(i, (Tone)tone, 150);
+        lastTone[i] = tone;
     }
-  }
+}
+
+// For each of the connected sensors, print readings for debug to USB
+// Watch C on black, no tile, and colors
+// Watch S on white and grays
+void printRGBReadings(){
+    DTERM_SERIAL.print("\033[2J\033[H");
+    for (int i = 0; i < NUM_SENSORS; i++){
+        if (!haveColor[i]) continue;
+        const Color &k = lastColor[i];
+        float sat;
+        float hue = hueFromColor(k, sat);
+
+        DEBUG_SERIAL.print(SENSOR_NAMES[i]);
+        DEBUG_SERIAL.print(" C:"); DEBUG_SERIAL.print(k.c);
+        DEBUG_SERIAL.print(" R:"); DEBUG_SERIAL.print(k.r);
+        DEBUG_SERIAL.print(" G:"); DEBUG_SERIAL.print(k.g);
+        DEBUG_SERIAL.print(" B:"); DEBUG_SERIAL.print(k.b);
+        DEBUG_SERIAL.print(" H:"); DEBUG_SERIAL.print(hue, 1);
+        DEBUG_SERIAL.print(" S:"); DEBUG_SERIAL.print(sat, 2);
+        DEBUG_SERIAL.print(" -> ");
+        if (idle[i])               DEBUG_SERIAL.println("IDLE (dark)");
+        else if (sat < SAT_MIN)    DEBUG_SERIAL.println("SILENT (low sat)");
+        else if (lastTone[i] >= 0) DEBUG_SERIAL.println(TONE_NAMES[lastTone[i]]);
+        else                       DEBUG_SERIAL.println("--");
+    }
 }
 
 // Take action on received debug commands
@@ -191,6 +254,14 @@ void handleCmd(char *cmd){
             DTERM_SERIAL.print("Now playing at frequency: "); DTERM_SERIAL.println(nf);
         }
     }
+    else if (strcmp(cmd, "sensors") == 0){
+    sensorsEnabled = !sensorsEnabled;
+    if (!sensorsEnabled){
+        for (uint8_t i = 0; i < NUM_SENSORS; i++) silence(i);
+    }
+    DTERM_SERIAL.print("sensor-driven tones ");
+    DTERM_SERIAL.println(sensorsEnabled ? "on" : "off");
+}
     else if (strcmp(cmd, "stop") == 0){
         synthStop(0);
     }
@@ -219,51 +290,21 @@ void readSerialCmd(){
     }
 }
 
-// Track playback functions
-
-void silence(uint8_t i){
-    if (lastTone[i] >= 0) synthStop(i);
-    lastTone[i] = -1;
-}
-
-// Update the tracks based on I2C sensor data
-void updateTracks(){
-    for (uint8_t i = 0; i < NUM_SENSORS; i++){
-        if (!sensor_ok[i]) continue;
-        if (!(readReg(*RGB_SENSORS[i], REG_STATUS) & 0x01)) continue;  // no new data yet
-        Color k = readColor(*RGB_SENSORS[i]);
-
-        // Brightness gate with hysteresis
-        if (idle[i] && k.c > CLEAR_TO_ACTIVE) idle[i] = false;
-        if (!idle[i] && k.c < CLEAR_TO_IDLE)  idle[i] = true;
-        if (idle[i]) { silence(i); continue; }
-
-        // Saturation gate: bright but colorless (gray/white) is also silence
-        float sat;
-        float hue = hueFromColor(k, sat);
-        if (sat < SAT_MIN) { silence(i); continue; }
-
-        // Only touch the synth when the note changes
-        int8_t tone = (int8_t)hueToTone(hue);
-        if (tone == lastTone[i]) continue;
-        if (lastTone[i] < 0) synthPlay(i, (Tone)tone);
-        else                 synthGlideTo(i, (Tone)tone, 150);
-        lastTone[i] = tone;
-    }
-}
-
 // Main program loop
 void loop(){
     // Update DMA buffers for DAC imediately!
     synthUpdate();
 
+    
+    
     // Update tracks according to RGB sensor input
     // On a timer as to not bang I2C every pass of loop
     unsigned long now = millis();
-    if ((now - lastPoll) >= SENSOR_POLL_MS){
+    if (sensorsEnabled && (now - lastPoll) >= SENSOR_POLL_MS){
         lastPoll = now;
         updateTracks();
     }
+    
     // Handles incoming debug commands
     readSerialCmd();
     
