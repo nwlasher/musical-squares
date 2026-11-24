@@ -22,7 +22,7 @@
 //   3 = DEBUG on UART,  DTERM on USB
 //   4 = DEBUG on USB,   DTERM on USB  (Both over usb)
 
-#define OUTPUT_CONFIG 1
+#define OUTPUT_CONFIG 4
 
 #if OUTPUT_CONFIG == 1
   #define DEBUG_SERIAL Serial1
@@ -43,8 +43,9 @@
   #define DEBUG_SERIAL Serial
   #define DTERM_SERIAL Serial
   #define USES_UART 0
-  #define USES_USB  1
-  #error "OUTPUT_CONFIG must be 1, 2, 3 or 4"
+#define USES_USB  1
+#else
+ #error "OUTPUT_CONFIG must be 1, 2, 3 or 4"
 #endif
 
 #define BAUD_RATE 115200 // Serial UART baud rate to PC for debug output
@@ -53,7 +54,13 @@
  
 const unsigned long DEBUG_INTERVAL = 100; // 100 ms
 
-const uint8_t illPin = D2; // Common pin to toggle illumination on the RGB color sensors
+// Moved to separate pins when installed into enclosure
+const uint8_t L_ILLPIN = 32; // ~~Common pin~~ Set/Clear these To toggle
+                             // illumination on the RGB color sensors
+const uint8_t C_ILLPIN = 31;
+const uint8_t R_ILLPIN = 30;
+
+// Interrupt pins are also available but unsused as of now; 41,43,45;L,C,R
 
 const uint16_t CLEAR_TO_IDLE   = 150;   // PLACEHOLDERS: calibrate against real tiles
 const uint16_t CLEAR_TO_ACTIVE = 300;   // must be > CLEAR_TO_IDLE (this gap is the hysteresis)
@@ -93,7 +100,7 @@ void scanBus(TwoWire &bus, const char *name){
   }
 }
 
-
+// setup code runs here
 void setup(){
     delay(500); // Startup settle delay (So I don't miss debug output)
     if (USES_USB){
@@ -104,14 +111,17 @@ void setup(){
     }
 
     // Interfereance pin, for debugging the DAC ripple 
-    pinMode(D3, OUTPUT);
+    //pinMode(D3, OUTPUT);
 
     // Clear DTERMinal and mark boot
     DTERM_SERIAL.print("\033[2J\033[H");
     DTERM_SERIAL.println("boot!");
 
     // Initialize pinout
-    pinMode(illPin, OUTPUT);
+    pinMode(L_ILLPIN, OUTPUT); // For the digital toggle of the onboard LEDs
+    pinMode(C_ILLPIN, OUTPUT);
+    pinMode(R_ILLPIN, OUTPUT);
+    
     
     // Initialize I2C hardware
     for (int i = 0; i < NUM_SENSORS; i++){ // Increase this to tile sensors
@@ -132,7 +142,6 @@ void setup(){
 
     // Initialize DAC
     if (!synthInit()) DEBUG_SERIAL.println("DAC init FAILED");
-
     // Silence all tracks
     for (uint8_t i = 0; i < NUM_SENSORS; i++){
     idle[i]     = true;    // start silent until a tile is seen
@@ -212,8 +221,10 @@ void handleCmd(char *cmd){
     // Accept and handle simple commands to toggle and view system state
     if (strcmp(cmd, "led") == 0){
       illPinState = !illPinState;
-      digitalWrite(illPin, illPinState ? HIGH : LOW);
-      DTERM_SERIAL.println("led toggled");
+      digitalWrite(L_ILLPIN, illPinState ? HIGH : LOW);
+      digitalWrite(C_ILLPIN, illPinState ? HIGH : LOW);
+      digitalWrite(R_ILLPIN, illPinState ? HIGH : LOW);
+      DTERM_SERIAL.println("leds toggled");
     }
     else if (strcmp(cmd, "stream") == 0) {
         streaming = !streaming;
@@ -224,7 +235,7 @@ void handleCmd(char *cmd){
         DTERM_SERIAL.println("STATE");
         DTERM_SERIAL.print("streaming=");
         DTERM_SERIAL.println(streaming);
-        DTERM_SERIAL.print(" led");
+        DTERM_SERIAL.print(" leds");
         DTERM_SERIAL.println(illPinState ? " on" : " off");
         DTERM_SERIAL.println("Sensor states:");
         for (int i = 0; i < NUM_SENSORS; i++){
